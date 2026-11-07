@@ -1,4 +1,452 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Spanish With Love ❤️</title><style>:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#40313d;background:#fff7fa}*{box-sizing:border-box}body{margin:0}header{background:#fff;padding:18px 6%;border-bottom:1px solid #f4dce5;display:flex;justify-content:space-between;align-items:center}h1{font-size:24px;margin:0;color:#a63e6d}main{max-width:900px;margin:35px auto;padding:0 18px}.hero{background:linear-gradient(120deg,#fbd4e4,#fff0e7);border-radius:24px;padding:32px}h2{margin-top:0}.muted{color:#756671}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}.card{background:white;border:1px solid #f3dce5;border-radius:18px;padding:20px}button{border:0;border-radius:12px;padding:11px 16px;background:#a63e6d;color:white;font-weight:650;cursor:pointer}button.secondary{background:#f9e3ec;color:#8e315e}button:focus-visible{outline:3px solid #402c9d}button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.hidden{display:none}.phrase{padding:14px 0;border-bottom:1px solid #f3e2e9}.phrase:last-child{border:0}.small{font-size:13px}.choices{display:grid;gap:10px}.choice{text-align:left;background:#fff;color:#40313d;border:1px solid #dfb8c8}.choice:hover{background:#fff0f6}.correct{border-color:#33845d;background:#e7f6ec!important}.incorrect{border-color:#bc4560;background:#ffe8ee!important}.progress{background:#f2dce5;height:10px;border-radius:20px;overflow:hidden}.bar{background:#a63e6d;height:100%;width:0;transition:width .2s}footer{text-align:center;padding:30px;color:#756671}</style></head><body><header><h1>Spanish With Love ♡</h1><span class="muted">Made just for you ❤️.</span></header><main><section id="home"><div class="hero"><h2>¡Hola, mi amor! 💗</h2><p>Learn Spanish in your own space. No pressure, no audience, just one little step at a time.</p><p id="progressLabel">0 of 4 lessons completed</p><div class="progress"><div class="bar" id="progressBar"></div></div></div><h2 style="margin-top:30px">Your lessons</h2><div id="lessonGrid" class="grid"></div><div class="card"><h3>🌷 A little reminder</h3><p>It's okay to repeat a word ten times. You're learning, not performing.</p></div></section><section id="lesson" class="hidden"><button class="secondary" onclick="showHome()">← All lessons</button><div class="card" style="margin-top:18px"><p class="muted" id="lessonNumber"></p><h2 id="lessonTitle"></h2><p id="lessonGoal"></p><h3>Listen and repeat (only if you feel ready)</h3><p class="small muted">Tap the speaker to hear the Spanish. Audio depends on your device's available Spanish voice.</p><div id="phrases"></div><h3>Private speaking challenge</h3><p>First listen. Then whisper one phrase. When you're comfortable, try saying it out loud. You never need to record yourself.</p><button class="secondary" id="challengeButton" onclick="toggleChallenge()">I practiced speaking ✓</button><p id="challengeStatus" class="muted small"></p><h3>Mini quiz</h3><div id="quiz"></div><p id="feedback" aria-live="polite"></p><button id="finishButton" disabled onclick="finishLesson()">Complete lesson</button></div></section></main><footer>Made with love. Every little step counts. ♡</footer><script>
-const lessons=[{title:'Hello & greetings',goal:'Greet someone and say how you feel.',words:[['Hola','Hello','OH-lah'],['Buenos días','Good morning','BWEH-nohs DEE-ahs'],['¿Cómo estás?','How are you?','KOH-moh ehs-TAHS'],['Estoy bien','I am good','ehs-TOY byen'],['Gracias','Thank you','GRAH-syahs']],question:'What does “¿Cómo estás?” mean?',options:['Thank you','How are you?','Good night'],answer:1},{title:'Sweet everyday phrases',goal:'Learn phrases you might use with someone you love.',words:[['Te quiero','I love you','teh KYEH-roh'],['Te extraño','I miss you','teh ehk-STRAH-nyoh'],['Por favor','Please','por fah-VOR'],['De nada','You’re welcome','deh NAH-dah'],['Hasta luego','See you later','AHS-tah LWEH-goh']],question:'How do you say “I miss you”?',options:['Te extraño','De nada','Hasta luego'],answer:0},{title:'Talking about yourself',goal:'Introduce yourself with a few simple sentences.',words:[['Me llamo…','My name is…','meh YAH-moh'],['Soy de…','I am from…','soy deh'],['Tengo hambre','I am hungry','TEHN-goh AHM-breh'],['Estoy cansada','I am tired (female speaker)','ehs-TOY kahn-SAH-dah'],['Me gusta','I like it','meh GOOS-tah']],question:'What does “Tengo hambre” mean?',options:['I am tired','I am hungry','I like it'],answer:1},{title:'Understanding family conversations',goal:'Recognize useful words you may hear around family.',words:[['¿Qué pasó?','What happened? / What’s up?','keh pah-SOH'],['Mira','Look','MEE-rah'],['Vamos','Let’s go','VAH-mohs'],['Ahora','Now','ah-OH-rah'],['Un poquito','A little bit','oon poh-KEE-toh']],question:'What does “Un poquito” mean?',options:['Right now','A little bit','Let’s go'],answer:1}];
-const storageKey='spanish-with-love-progress-v1';let completed=[];try{completed=JSON.parse(localStorage.getItem(storageKey)||'[]');if(!Array.isArray(completed))completed=[]}catch{completed=[]}let current=0,selected=null,practiced=false;function save(){try{localStorage.setItem(storageKey,JSON.stringify(completed))}catch{}}function showHome(){document.getElementById('lesson').classList.add('hidden');document.getElementById('home').classList.remove('hidden');document.getElementById('progressLabel').textContent=`${completed.length} of ${lessons.length} lessons completed`;document.getElementById('progressBar').style.width=`${completed.length/lessons.length*100}%`;document.getElementById('lessonGrid').innerHTML=lessons.map((l,i)=>`<div class="card"><p class="muted small">LESSON ${i+1} ${completed.includes(i)?'· ✓ Completed':''}</p><h3>${l.title}</h3><p>${l.goal}</p><button onclick="openLesson(${i})">${completed.includes(i)?'Review lesson':'Start lesson'} →</button></div>`).join('')};function openLesson(i){current=i;selected=null;practiced=false;const l=lessons[i];document.getElementById('home').classList.add('hidden');document.getElementById('lesson').classList.remove('hidden');document.getElementById('lessonNumber').textContent=`LESSON ${i+1} OF ${lessons.length}`;document.getElementById('lessonTitle').textContent=l.title;document.getElementById('lessonGoal').textContent=l.goal;document.getElementById('phrases').innerHTML=l.words.map((w,j)=>`<div class="phrase row"><div><strong>${w[0]}</strong><div>${w[1]}</div><div class="small muted">${w[2]} (approx.)</div></div><button class="secondary" aria-label="Hear ${w[0]}" onclick="speak(${j})">🔊 Listen</button></div>`).join('');document.getElementById('quiz').innerHTML=`<p><strong>${l.question}</strong></p><div class="choices">${l.options.map((o,j)=>`<button class="choice" onclick="answer(${j})">${o}</button>`).join('')}</div>`;document.getElementById('feedback').textContent='';document.getElementById('challengeStatus').textContent='';document.getElementById('challengeButton').textContent='I practiced speaking ✓';updateFinish();window.scrollTo(0,0)}function speak(j){if(!('speechSynthesis' in window)){alert('Speech playback is not available in this browser.');return}speechSynthesis.cancel();let utterance=new SpeechSynthesisUtterance(lessons[current].words[j][0]);utterance.lang='es-PR';utterance.rate=.78;speechSynthesis.speak(utterance)}function answer(j){selected=j;const right=lessons[current].answer;document.querySelectorAll('.choice').forEach((b,k)=>{b.classList.toggle('correct',k===right);b.classList.toggle('incorrect',k===j&&j!==right)});document.getElementById('feedback').textContent=j===right?'¡Muy bien! You got it! 💗':'Not quite. Try again whenever you’re ready.';updateFinish()}function toggleChallenge(){practiced=!practiced;document.getElementById('challengeStatus').textContent=practiced?'Nice work! You can be proud of trying.':'Take all the time you need.';document.getElementById('challengeButton').textContent=practiced?'✓ Speaking practice done':'I practiced speaking ✓';updateFinish()}function updateFinish(){document.getElementById('finishButton').disabled=!(selected===lessons[current].answer&&practiced)}function finishLesson(){if(!completed.includes(current))completed.push(current);save();showHome();window.scrollTo(0,0)}showHome();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spanish With Evil ❤️</title>
+    <style>
+      :root {
+        font-family: system-ui,-apple-system,Segoe UI,sans-serif;
+        color: #40313d;
+        background: #fff7fa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      header {
+        background: #fff;
+        padding: 18px 6%;
+        border-bottom: 1px solid #f4dce5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin: 0;
+        color: #a63e6d;
+      }
+
+      main {
+        max-width: 900px;
+        margin: 35px auto;
+        padding: 0 18px;
+      }
+
+      .hero {
+        background: linear-gradient(120deg,#fbd4e4,#fff0e7);
+        border-radius: 24px;
+        padding: 32px;
+      }
+
+      h2 {
+        margin-top: 0;
+      }
+
+      .muted {
+        color: #756671;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+        gap: 14px;
+        margin: 20px 0;
+      }
+
+      .card {
+        background: white;
+        border: 1px solid #f3dce5;
+        border-radius: 18px;
+        padding: 20px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 16px;
+        background: #a63e6d;
+        color: white;
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #f9e3ec;
+        color: #8e315e;
+      }
+
+      button:focus-visible {
+        outline: 3px solid #402c9d;
+      }
+
+      button:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .phrase {
+        padding: 14px 0;
+        border-bottom: 1px solid #f3e2e9;
+      }
+
+      .phrase:last-child {
+        border: 0;
+      }
+
+      .small {
+        font-size: 13px;
+      }
+
+      .choices {
+        display: grid;
+        gap: 10px;
+      }
+
+      .choice {
+        text-align: left;
+        background: #fff;
+        color: #40313d;
+        border: 1px solid #dfb8c8;
+      }
+
+      .choice:hover {
+        background: #fff0f6;
+      }
+
+      .correct {
+        border-color: #33845d;
+        background: #e7f6ec!important;
+      }
+
+      .incorrect {
+        border-color: #bc4560;
+        background: #ffe8ee!important;
+      }
+
+      .progress {
+        background: #f2dce5;
+        height: 10px;
+        border-radius: 20px;
+        overflow: hidden;
+      }
+
+      .bar {
+        background: #a63e6d;
+        height: 100%;
+        width: 0;
+        transition: width .2s;
+      }
+
+      footer {
+        text-align: center;
+        padding: 30px;
+        color: #756671;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Spanish With Love ♡</h1>
+      <span class="muted">Made just for you ❤️.</span>
+    </header>
+    <main>
+      <section id="home">
+        <div class="hero">
+          <h2>¡Hola, mi amor! 💗</h2>
+          <p>Learn Spanish in your own space. No pressure, no audience, just one little step at a time.</p>
+          <p id="progressLabel">0 of 4 lessons completed</p>
+          <div class="progress">
+            <div class="bar" id="progressBar"></div>
+          </div>
+        </div>
+        <h2 style="margin-top:30px">Your lessons</h2>
+        <div id="lessonGrid" class="grid"></div>
+        <div class="card">
+          <h3>🌷 A little reminder</h3>
+          <p>It's okay to repeat a word ten times. You're learning, not performing.</p>
+        </div>
+      </section>
+      <section id="lesson" class="hidden">
+        <button class="secondary" onclick="showHome()">← All lessons</button>
+        <div class="card" style="margin-top:18px">
+          <p class="muted" id="lessonNumber"></p>
+          <h2 id="lessonTitle"></h2>
+          <p id="lessonGoal"></p>
+          <h3>Listen and repeat (only if you feel ready)</h3>
+          <p class="small muted">Tap the speaker to hear the Spanish. Audio depends on your device's available Spanish voice.</p>
+          <div id="phrases"></div>
+          <h3>Private speaking challenge</h3>
+          <p>First listen. Then whisper one phrase. When you're comfortable, try saying it out loud. You never need to record yourself.</p>
+          <button class="secondary" id="challengeButton" onclick="toggleChallenge()">I practiced speaking ✓</button>
+          <p id="challengeStatus" class="muted small"></p>
+          <h3>Mini quiz</h3>
+          <div id="quiz"></div>
+          <p id="feedback" aria-live="polite"></p>
+          <button id="finishButton" disabled onclick="finishLesson()">Complete lesson</button>
+        </div>
+      </section>
+    </main>
+    <footer>Made with love. Every little step counts. ♡</footer>
+    <script>
+      const lessons = [
+        {
+          title: 'Hello & greetings',
+          goal: 'Greet someone and say how you feel.',
+          words: [
+            [
+              'Hola',
+              'Hello',
+              'OH-lah'
+            ],
+            [
+              'Buenos días',
+              'Good morning',
+              'BWEH-nohs DEE-ahs'
+            ],
+            [
+              '¿Cómo estás?',
+              'How are you?',
+              'KOH-moh ehs-TAHS'
+            ],
+            [
+              'Estoy bien',
+              'I am good',
+              'ehs-TOY byen'
+            ],
+            [
+              'Gracias',
+              'Thank you',
+              'GRAH-syahs'
+            ]
+          ],
+          question: 'What does “¿Cómo estás?” mean?',
+          options: [
+            'Thank you',
+            'How are you?',
+            'Good night'
+          ],
+          answer: 1
+        },
+        {
+          title: 'Sweet everyday phrases',
+          goal: 'Learn phrases you might use with someone you love.',
+          words: [
+            [
+              'Te quiero',
+              'I love you',
+              'teh KYEH-roh'
+            ],
+            [
+              'Te extraño',
+              'I miss you',
+              'teh ehk-STRAH-nyoh'
+            ],
+            [
+              'Por favor',
+              'Please',
+              'por fah-VOR'
+            ],
+            [
+              'De nada',
+              'You’re welcome',
+              'deh NAH-dah'
+            ],
+            [
+              'Hasta luego',
+              'See you later',
+              'AHS-tah LWEH-goh'
+            ]
+          ],
+          question: 'How do you say “I miss you”?',
+          options: [
+            'Te extraño',
+            'De nada',
+            'Hasta luego'
+          ],
+          answer: 0
+        },
+        {
+          title: 'Talking about yourself',
+          goal: 'Introduce yourself with a few simple sentences.',
+          words: [
+            [
+              'Me llamo…',
+              'My name is…',
+              'meh YAH-moh'
+            ],
+            [
+              'Soy de…',
+              'I am from…',
+              'soy deh'
+            ],
+            [
+              'Tengo hambre',
+              'I am hungry',
+              'TEHN-goh AHM-breh'
+            ],
+            [
+              'Estoy cansada',
+              'I am tired (female speaker)',
+              'ehs-TOY kahn-SAH-dah'
+            ],
+            [
+              'Me gusta',
+              'I like it',
+              'meh GOOS-tah'
+            ]
+          ],
+          question: 'What does “Tengo hambre” mean?',
+          options: [
+            'I am tired',
+            'I am hungry',
+            'I like it'
+          ],
+          answer: 1
+        },
+        {
+          title: 'Understanding family conversations',
+          goal: 'Recognize useful words you may hear around family.',
+          words: [
+            [
+              '¿Qué pasó?',
+              'What happened? / What’s up?',
+              'keh pah-SOH'
+            ],
+            [
+              'Mira',
+              'Look',
+              'MEE-rah'
+            ],
+            [
+              'Vamos',
+              'Let’s go',
+              'VAH-mohs'
+            ],
+            [
+              'Ahora',
+              'Now',
+              'ah-OH-rah'
+            ],
+            [
+              'Un poquito',
+              'A little bit',
+              'oon poh-KEE-toh'
+            ]
+          ],
+          question: 'What does “Un poquito” mean?',
+          options: [
+            'Right now',
+            'A little bit',
+            'Let’s go'
+          ],
+          answer: 1
+        }
+      ];
+      const storageKey = 'spanish-with-love-progress-v1';
+      let completed = [];
+      try {
+        completed = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (!Array.isArray(completed)) completed = []
+      } catch {
+        completed = []
+      }
+      let current = 0, selected = null, practiced = false;
+
+      function save() {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(completed))
+        } catch {
+        }
+      }
+
+      function showHome() {
+        document.getElementById('lesson').classList.add('hidden');
+        document.getElementById('home').classList.remove('hidden');
+        document.getElementById('progressLabel').textContent = `${completed.length} of ${lessons.length} lessons completed`;
+        document.getElementById('progressBar').style.width = `${completed.length/lessons.length*100}%`;
+        document.getElementById('lessonGrid').innerHTML = lessons.map((l, i) => `<div class="card"><p class="muted small">LESSON ${i+1} ${completed.includes(i)?'· ✓ Completed':''}</p><h3>${l.title}</h3><p>${l.goal}</p><button onclick="openLesson(${i})">${completed.includes(i)?'Review lesson':'Start lesson'} →</button></div>`).join('')
+      };
+
+      function openLesson(i) {
+        current = i;
+        selected = null;
+        practiced = false;
+        const l = lessons[i];
+        document.getElementById('home').classList.add('hidden');
+        document.getElementById('lesson').classList.remove('hidden');
+        document.getElementById('lessonNumber').textContent = `LESSON ${i+1} OF ${lessons.length}`;
+        document.getElementById('lessonTitle').textContent = l.title;
+        document.getElementById('lessonGoal').textContent = l.goal;
+        document.getElementById('phrases').innerHTML = l.words.map((w, j) => `<div class="phrase row"><div><strong>${w[0]}</strong><div>${w[1]}</div><div class="small muted">${w[2]} (approx.)</div></div><button class="secondary" aria-label="Hear ${w[0]}" onclick="speak(${j})">🔊 Listen</button></div>`).join('');
+        document.getElementById('quiz').innerHTML = `<p><strong>${l.question}</strong></p><div class="choices">${l.options.map((o,j)=>`<button class="choice" onclick="answer(${j})">${o}</button>`).join('')}</div>`;
+        document.getElementById('feedback').textContent = '';
+        document.getElementById('challengeStatus').textContent = '';
+        document.getElementById('challengeButton').textContent = 'I practiced speaking ✓';
+        updateFinish();
+        window.scrollTo(0, 0)
+      }
+
+      function speak(j) {
+        if (!('speechSynthesis' in window)) {
+          alert('Speech playback is not available in this browser.');
+          return
+        }
+        speechSynthesis.cancel();
+        let utterance = new SpeechSynthesisUtterance(lessons[current].words[j][0]);
+        utterance.lang = 'es-PR';
+        utterance.rate = .78;
+        speechSynthesis.speak(utterance)
+      }
+
+      function answer(j) {
+        selected = j;
+        const right = lessons[current].answer;
+        document.querySelectorAll('.choice').forEach((b, k) => {
+          b.classList.toggle('correct', k === right);
+          b.classList.toggle('incorrect', k === j && j !== right)
+        });
+        document.getElementById('feedback').textContent = j === right ? '¡Muy bien! You got it! 💗': 'Not quite. Try again whenever you’re ready.';
+        updateFinish()
+      }
+
+      function toggleChallenge() {
+        practiced = !practiced;
+        document.getElementById('challengeStatus').textContent = practiced ? 'Nice work! You can be proud of trying.': 'Take all the time you need.';
+        document.getElementById('challengeButton').textContent = practiced ? '✓ Speaking practice done': 'I practiced speaking ✓';
+        updateFinish()
+      }
+
+      function updateFinish() {
+        document.getElementById('finishButton').disabled = !(selected === lessons[current].answer && practiced)
+      }
+
+      function finishLesson() {
+        if (!completed.includes(current)) completed.push(current);
+        save();
+        showHome();
+        window.scrollTo(0, 0)
+      }
+
+      showHome();
+    </script>
+  </body>
+</html>
